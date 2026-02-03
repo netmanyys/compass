@@ -1,0 +1,22 @@
+# env
+.env
+.env.*
+*.env
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# django
+db.sqlite3
+media/
+
+# node
+node_modules/
+dist/
+build/
+
+# mac
+.DS_Store
