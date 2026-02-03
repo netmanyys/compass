@@ -7,41 +7,47 @@ type Props = {
 };
 
 const VehicleTable: React.FC<Props> = ({ vehicles }) => {
+  const apiBase = (import.meta as any).env?.VITE_API_BASE || "http://localhost:8080/api";
+  const uploadBase = apiBase.replace(/\/api\/?$/, "");
   return (
-    <table className="table">
-      <thead>
-        <tr>
-          <th>VIN</th>
-          <th>Manufacture</th>
-          <th>Model</th>
-          <th>Year</th>
-          <th>Color</th>
-          <th>Mileage</th>
-          <th>Status</th>
-          <th>List Price</th>
-          <th>Location</th>
-        </tr>
-      </thead>
-      <tbody>
-        {vehicles.map((vehicle) => (
-          <tr key={vehicle.id}>
-            <td>
-              <Link to={`/vehicles/${vehicle.id}`}>{vehicle.vin}</Link>
-            </td>
-            <td>{vehicle.manufacture}</td>
-            <td>{vehicle.model}</td>
-            <td>{vehicle.year}</td>
-            <td>{vehicle.color}</td>
-            <td>{vehicle.mileage}</td>
-            <td>
-              <span className="badge">{vehicle.status}</span>
-            </td>
-            <td>${vehicle.list_price}</td>
-            <td>{vehicle.location}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="vehicle-grid">
+      {vehicles.map((vehicle) => {
+        const listPrice = (vehicle as any).listPrice ?? (vehicle as any).list_price;
+        const primaryImage = (vehicle as any).primaryImageUrl;
+        const imageSrc = primaryImage
+          ? primaryImage.startsWith("/uploads")
+            ? `${uploadBase}${primaryImage}`
+            : primaryImage
+          : null;
+        return (
+          <div className="card vehicle-card" key={vehicle.id}>
+            <div className="vehicle-image">
+              {imageSrc ? (
+                <img src={imageSrc} alt={vehicle.vin} />
+              ) : (
+                <div style={{ padding: 12, color: "#6b7280" }}>No image</div>
+              )}
+            </div>
+            <div className="vehicle-body">
+              <div className="vehicle-title">
+                {vehicle.year} {vehicle.manufacture} {vehicle.model}
+              </div>
+              <div className="vehicle-sub">
+                {vehicle.color} • {vehicle.mileage} miles
+              </div>
+              <div className="vehicle-price">${listPrice}</div>
+              <div className="vehicle-meta">
+                <span>{vehicle.location}</span>
+                <span className="badge">{vehicle.status}</span>
+              </div>
+              <div style={{ marginTop: 10 }}>
+                <Link to={`/vehicles/${vehicle.id}`}>View details →</Link>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 };
 

@@ -5,8 +5,8 @@ import { AuthProvider, useAuth } from "../context/AuthContext";
 
 vi.mock("../api/client", () => ({
   default: {
-    get: vi.fn(() => Promise.resolve({ data: { id: 1, username: "admin", email: "", role: "admin" } })),
-    post: vi.fn(() => Promise.resolve({ data: { access: "token", refresh: "refresh" } })),
+    get: vi.fn(() => Promise.resolve({ data: { id: "1", username: "admin", email: "", role: "admin" } })),
+    post: vi.fn(() => Promise.resolve({ data: { accessToken: "token", refreshToken: "refresh" } })),
   },
   tokenStorage: {
     get access() {

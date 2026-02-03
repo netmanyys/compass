@@ -1,84 +1,114 @@
-# Compass Inventory (MVP)
+# Compass Inventory (Spring Boot + React)
 
-Internal inventory system for a used car dealership.
+二手车商内部库存管理系统（MVP，可扩展）。后端改为 Spring Boot 3 + PostgreSQL + Flyway + JWT。
 
-## Stack
+## 技术栈
 
-- Frontend: React + TypeScript + React Router (Vite)
-- Backend: Django + DRF + JWT (simplejwt)
+- Frontend: React + TypeScript + Vite + React Router + axios
+- Backend: Java 17 + Spring Boot 3 + Spring Web + Spring Data JPA + Spring Security + JWT
 - DB: PostgreSQL
-- Auth: JWT
-- RBAC: Django Groups (`admin`, `staff`)
-- Dev deployment: Docker Compose
+- Migration: Flyway (V1 初始化 + V2 seed)
+- Dev Deploy: Docker Compose (db + backend + frontend)
 
-## Quick Start (Docker)
-
-1) Copy env file
+## Quick Start
 
 ```bash
 cp .env.example .env
-```
 
-2) Build and start
-
-```bash
 docker compose up --build
 ```
 
-3) Run migrations (automatically in backend container). Optionally seed data:
-
-```bash
-docker compose exec backend python manage.py seed_demo
-```
-
-4) Create an admin user (Django admin):
-
-```bash
-docker compose exec backend python manage.py createsuperuser
-```
-
-5) Create a staff user and assign group:
-
-```bash
-docker compose exec backend python manage.py shell
-```
-
-```python
-from django.contrib.auth.models import Group, User
-staff_group, _ = Group.objects.get_or_create(name="staff")
-user = User.objects.create_user("staff_user", password="changeme")
-user.groups.add(staff_group)
-```
-
-## Access
-
+访问地址：
 - Frontend: http://localhost:5173
-- Backend API: http://localhost:8000/api
-- Admin: http://localhost:8000/admin
+- Backend: http://localhost:8080/api
+- 静态图片: http://localhost:8080/uploads/**
 
-## Auth Endpoints
+默认账号（Flyway seed）：
+- admin / admin123
+- staff / staff123
 
-- POST `/api/auth/login/` (username/password) -> access/refresh
-- POST `/api/auth/refresh/`
-- GET `/api/auth/me/`
+## RBAC
 
-## API Notes
+- ROLE_ADMIN: CRUD + 上传图片
+- ROLE_STAFF: 只读（GET）
 
-- Vehicles: `/api/vehicles/` supports filtering, ordering, pagination
-- Packages: `/api/packages/`
-- Service records: `/api/vehicles/:id/service-records/`
-- Comments: `/api/vehicles/:id/comments/`
-- Images: `/api/vehicles/:id/images/`
+验证：staff 调用 POST/PATCH/DELETE `/api/**` 应返回 403。
 
-## RBAC Rules
+## Auth API
 
-- `admin`: CRUD all resources
-- `staff`: read-only (GET, search, filter)
+- POST `/api/auth/login`
+- POST `/api/auth/refresh`
+- GET `/api/auth/me`
 
-## Tests
+返回 accessToken + refreshToken（access 15min，refresh 7days）。
 
-Backend tests:
+## 车辆 API
 
+- GET `/api/vehicles`（分页：page/size，排序：sort=year,desc）
+- POST `/api/vehicles`
+- GET `/api/vehicles/{id}`
+- PATCH `/api/vehicles/{id}`
+- DELETE `/api/vehicles/{id}`
+
+过滤参数（全部支持）：
+- vin, manufacture, model
+- yearMin/yearMax
+- priceMin/priceMax
+- mileageMin/mileageMax
+- color, status, conditionGrade
+- packageIds=uuid1,uuid2
+- keyword
+
+## Service Records
+
+- GET `/api/service-records?vehicleId={id}`
+- POST `/api/service-records`
+- PATCH `/api/service-records/{id}`
+- DELETE `/api/service-records/{id}`
+
+## Comments
+
+- GET `/api/vehicle-comments?vehicleId={id}`
+- POST `/api/vehicle-comments`
+- DELETE `/api/vehicle-comments/{id}`
+
+## Images
+
+- GET `/api/vehicle-images?vehicleId={id}`
+- POST `/api/vehicle-images` (multipart/form-data)
+  - vehicleId, image(file), caption, isPrimary, sortOrder
+- PATCH `/api/vehicle-images/{id}` (caption/isPrimary/sortOrder)
+- DELETE `/api/vehicle-images/{id}`
+
+上传目录：`./backend/uploads` -> `/app/uploads`，访问路径：`/uploads/**`。
+
+## 测试
+
+Backend:
 ```bash
-docker compose exec backend python manage.py test
+docker compose run --rm backend mvn -q test
 ```
+
+Frontend:
+```bash
+cd frontend
+npm install
+npm test
+```
+
+## BCrypt Hash（用于 seed）
+
+V2__seed.sql 使用以下 bcrypt：
+- admin123: `$2y$05$Gc2JQuTksq9k5kHV3jKTce9IUOISgvJxXehPpN2AbkI0Fq/cHhYu2`
+- staff123: `$2y$05$Wp6vfuohl1H7kMoaaN2jkedeMkgzH0QpCNWBDQGw3/SteeoodFUWC`
+
+可用 `htpasswd -nbB user pass` 重新生成。
+
+## 自检清单（已验证）
+
+- A. Compose 可运行：db/back/front 启动成功，Flyway V1/V2 自动执行无报错。
+- B. 鉴权可用：admin/staff 登录成功，/api/auth/me 返回 role 正确。
+- C. RBAC 正确：staff 写操作 403，admin CRUD 正常。
+- D. Vehicles 过滤可用：manufacture/model icontains、范围过滤、排序分页可用。
+- E. 图片上传可用：上传/访问/主图切换/删除正常（/uploads/**）。
+- F. 前端功能可用：登录->dashboard 过滤->详情；admin 可上传图片与新增记录，staff 不显示按钮。

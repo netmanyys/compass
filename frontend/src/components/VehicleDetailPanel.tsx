@@ -4,6 +4,9 @@ import { Vehicle } from "../types/inventory";
 const VehicleDetailPanel: React.FC<{ vehicle: Vehicle | null; isAdmin: boolean }> = ({ vehicle, isAdmin }) => {
   if (!vehicle) return null;
 
+  const apiBase = (import.meta as any).env?.VITE_API_BASE || "http://localhost:8080/api";
+  const uploadBase = apiBase.replace(/\/api\/?$/, "");
+
   return (
     <div className="grid two">
       <div className="card">
@@ -12,18 +15,17 @@ const VehicleDetailPanel: React.FC<{ vehicle: Vehicle | null; isAdmin: boolean }
         <p>Color: {vehicle.color}</p>
         <p>Mileage: {vehicle.mileage}</p>
         <p>Status: {vehicle.status}</p>
-        <p>Condition: {vehicle.condition_grade}</p>
-        <p>List Price: ${vehicle.list_price}</p>
+        <p>Condition: {vehicle.conditionGrade ?? (vehicle as any).condition_grade}</p>
+        <p>List Price: ${(vehicle as any).listPrice ?? (vehicle as any).list_price}</p>
         <p>Location: {vehicle.location}</p>
-        {vehicle.carfax_url && (
+        {((vehicle as any).carfaxUrl ?? (vehicle as any).carfax_url) && (
           <p>
-            Carfax: <a href={vehicle.carfax_url} target="_blank" rel="noreferrer">View</a>
+            Carfax: <a href={(vehicle as any).carfaxUrl ?? (vehicle as any).carfax_url} target="_blank" rel="noreferrer">View</a>
           </p>
         )}
         {isAdmin && (
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            <button className="btn">Edit</button>
-            <button className="btn secondary">Delete</button>
+            <span className="badge">Admin actions below</span>
           </div>
         )}
       </div>
@@ -41,11 +43,11 @@ const VehicleDetailPanel: React.FC<{ vehicle: Vehicle | null; isAdmin: boolean }
 
       <div className="card">
         <h4>Service Records</h4>
-        {vehicle.service_records?.length ? (
+        {vehicle.serviceRecords?.length ? (
           <ul>
-            {vehicle.service_records.map((record) => (
+            {vehicle.serviceRecords.map((record) => (
               <li key={record.id}>
-                {record.service_date} - {record.category} - ${record.cost}
+                {(record as any).serviceDate ?? record.service_date} - {record.category} - ${record.cost}
               </li>
             ))}
           </ul>
@@ -73,9 +75,11 @@ const VehicleDetailPanel: React.FC<{ vehicle: Vehicle | null; isAdmin: boolean }
         <h4>Images</h4>
         {vehicle.images?.length ? (
           <div className="grid">
-            {vehicle.images.map((img) => (
-              <img key={img.id} src={img.image_url} alt="vehicle" style={{ width: "100%", borderRadius: 8 }} />
-            ))}
+            {vehicle.images.map((img) => {
+              const url = (img as any).imageUrl ?? img.image_url;
+              const src = url && url.startsWith("/uploads") ? `${uploadBase}${url}` : url;
+              return <img key={img.id} src={src} alt="vehicle" style={{ width: "100%", borderRadius: 8 }} />;
+            })}
           </div>
         ) : (
           <p>No images.</p>
