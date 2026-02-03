@@ -1,17 +1,15 @@
-FROM python:3.12-slim
-
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 
 WORKDIR /app
+COPY pom.xml /app/
+COPY src /app/src
+RUN mvn -q -DskipTests package
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY --from=build /app/target/inventory-0.0.1-SNAPSHOT.jar /app/app.jar
 
-COPY requirements.txt /app/
-RUN pip install --no-cache-dir -r requirements.txt
+ENV JAVA_OPTS=""
+EXPOSE 8080
 
-COPY . /app/
-
-CMD ["/app/entrypoint.sh"]
+CMD ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]

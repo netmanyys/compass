@@ -15,11 +15,15 @@ services:
     env_file:
       - .env
     environment:
-      POSTGRES_HOST: db
+      DB_URL: jdbc:postgresql://db:5432/compass
+      DB_USER: ${POSTGRES_USER:-compass}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-compass}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me-please}
+      UPLOAD_DIR: /app/uploads
     ports:
-      - "8000:8000"
+      - "8080:8080"
     volumes:
-      - ./backend:/app
+      - ./backend/uploads:/app/uploads
     depends_on:
       - db
 

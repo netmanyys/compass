@@ -1,11 +1,11 @@
 export type Package = {
-  id: number;
+  id: string;
   name: string;
   description?: string;
 };
 
 export type Vehicle = {
-  id: number;
+  id: string;
   vin: string;
   manufacture: string;
   model: string;
@@ -13,19 +13,21 @@ export type Vehicle = {
   color: string;
   mileage: number;
   status: string;
-  list_price: string;
+  listPrice?: string;
   location: string;
-  condition_grade: string;
-  carfax_url?: string;
+  conditionGrade?: string;
+  carfaxUrl?: string;
   notes?: string;
-  packages?: Package[] | number[];
-  service_records?: ServiceRecord[];
+  primaryImageUrl?: string;
+  packages?: Package[];
+  serviceRecords?: ServiceRecord[];
   images?: VehicleImage[];
   comments?: VehicleComment[];
 };
 
 export type ServiceRecord = {
-  id: number;
+  id: string;
+  vehicleId?: string;
   service_date: string;
   vendor: string;
   odometer?: number;
@@ -36,19 +38,22 @@ export type ServiceRecord = {
 };
 
 export type VehicleImage = {
-  id: number;
+  id: string;
+  vehicleId?: string;
+  imageUrl?: string;
   image_url: string;
   is_primary: boolean;
 };
 
 export type VehicleComment = {
-  id: number;
+  id: string;
+  vehicleId?: string;
   comment: string;
   created_at: string;
 };
 
 export type UserMe = {
-  id: number;
+  id: string;
   username: string;
   email: string;
   role: "admin" | "staff";

@@ -1,13 +1,13 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE || "http://localhost:8000/api",
+  baseURL: import.meta.env.VITE_API_BASE || "http://localhost:8080/api",
 });
 
 export const tokenStorage = {
-  get access() {
-    return localStorage.getItem("access_token");
-  },
+    get access() {
+      return localStorage.getItem("access_token");
+    },
   get refresh() {
     return localStorage.getItem("refresh_token");
   },
@@ -55,11 +55,11 @@ api.interceptors.response.use(
         const refresh = tokenStorage.refresh;
         if (!refresh) throw error;
         const resp = await axios.post(
-          `${import.meta.env.VITE_API_BASE || "http://localhost:8000/api"}/auth/refresh/`,
-          { refresh }
+          `${import.meta.env.VITE_API_BASE || "http://localhost:8080/api"}/auth/refresh`,
+          { refreshToken: refresh }
         );
-        tokenStorage.set(resp.data.access, refresh);
-        pending.forEach((cb) => cb(resp.data.access));
+        tokenStorage.set(resp.data.accessToken, refresh);
+        pending.forEach((cb) => cb(resp.data.accessToken));
         pending = [];
         return api(original);
       } catch (err) {
